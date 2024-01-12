@@ -1,6 +1,10 @@
-import re
 import argparse
+import os
 import pkg_resources  # part of setuptools
+import re
+import shutil
+import subprocess
+import tempfile
 version = pkg_resources.require("classeur")[0].version
 
 SCISSORS = "✂✂✂"
@@ -35,6 +39,16 @@ def splitting(markdownfile, scissors):
                 else:
                     raise Exception("Format error")
 
+def launch_editor(file_path):
+    if "EDITOR" not in os.environ:
+        raise Exception("$EDITOR is not set, cannot launch editor.")
+
+    editor = shutil.which(os.environ["EDITOR"])
+
+    if not (os.path.isfile(editor) and os.access(editor, os.X_OK)):
+        raise Exception("$EDITOR is not executable")
+
+    subprocess.check_call([editor, file_path])
 
 def main():
     parser = argparse.ArgumentParser(
@@ -49,6 +63,8 @@ def main():
             help="Merge text files in one given by filename argument MERGE")
     parser.add_argument('-s', '--split', action='store_true',
             help="Split file given in SPLIT argument, then update matching files")
+    parser.add_argument('-e', '--edit', action='store_true',
+            help="Edit merged files in $EDITOR and merge them on exit")
     parser.add_argument("-c", "--scissors", default=SCISSORS,
             help=f"Scissors characters used (default '{SCISSORS}')")
     parser.add_argument("-o", "--output", default=DEFAULT_OUTPUT, 
@@ -63,11 +79,21 @@ def main():
     outputfilename = args.output
 
     if merge and split:
-        return Exception("can't both merge and split at same time, choose one")
+        raise Exception("can't both merge and split at same time, choose one")
+    if args.edit and (merge or split):
+        raise Exception("merge and split are incompatible with edit")
 
+    print(merge, split, args.edit)
     if merge:
         merging(markdownfiles, outputfilename,  scissors)
     elif split:
         splitting(markdownfiles[0], scissors)
+    elif args.edit:
+        print('edit')
+        with tempfile.TemporaryDirectory(prefix="classeur-") as tempoutdir:
+            tempout = os.path.join(tempoutdir, DEFAULT_OUTPUT)
+            merging(markdownfiles, tempout,  scissors)
+            launch_editor(tempout)
+            splitting(tempout, scissors)
     else:
-        print("Do you want to merge (-m) or split (-s) ?")
+        print("Do you want to merge (-m) or split (-s) or edit (-e) ?")
