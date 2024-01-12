@@ -34,10 +34,20 @@ def splitting(markdownfile, scissors):
                     openfile.close()
                 openfile = open(filename, "w")
             else:
-                if not openfile is None:
+                if openfile is not None:
                     openfile.write(line)
                 else:
                     raise Exception("Format error")
+
+def purging(markdownfile, scissors):
+    print(f"Purging {markdownfile} from header {scissors}-tagged")
+    regexp = re.compile(f"^{SCISSORS}(.*){SCISSORS}$")
+    with open(f"purged_{markdownfile}", "w") as openfile:
+        with open(markdownfile) as fp:
+            for line in fp:
+                if not regexp.match(line):
+                    openfile.write(line)
+    print(f"{markdownfile} purged in file purged_{markdownfile}")
 
 def launch_editor(file_path):
     if "EDITOR" not in os.environ:
@@ -69,6 +79,8 @@ def main():
             help=f"Scissors characters used (default '{SCISSORS}')")
     parser.add_argument("-o", "--output", default=DEFAULT_OUTPUT, 
             help=f"Output filename (default '{DEFAULT_OUTPUT}')")
+    parser.add_argument("-p", "--purge", action='store_true',
+            help=f"Purge merged text file from headers filenames tags")
   
     args = parser.parse_args()
 
@@ -77,14 +89,16 @@ def main():
     split = args.split
     scissors = args.scissors
     outputfilename = args.output
+    purge = args.purge
 
     if merge and split:
         raise Exception("can't both merge and split at same time, choose one")
     if args.edit and (merge or split):
         raise Exception("merge and split are incompatible with edit")
 
-    print(merge, split, args.edit)
-    if merge:
+    if purge:
+        purging(markdownfiles[0], scissors)
+    elif merge:
         merging(markdownfiles, outputfilename,  scissors)
     elif split:
         splitting(markdownfiles[0], scissors)

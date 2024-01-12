@@ -15,9 +15,9 @@ $ git clone https://github.com/Martoni/Classeur.git
 $ cd Classeur
 $ python -m pip install .
 $ classeur -h
-usage: classeur [-h] [-v VERSION] [-m] [-s] [-e] [-c SCISSORS] [-o OUTPUT] markdownfile [markdownfile ...]
+usage: classeur [-h] [-v VERSION] [-m] [-s] [-e] [-c SCISSORS] [-o OUTPUT] [-p] markdownfile [markdownfile ...]
 
-merge and split texts files. Version 0.1.0
+merge and split texts files. Version 0.2.0
 
 positional arguments:
   markdownfile          text files to merge, could be markdown or not, whatever.
@@ -33,6 +33,7 @@ optional arguments:
                         Scissors characters used (default '✂✂✂')
   -o OUTPUT, --output OUTPUT
                         Output filename (default 'document.md')
+  -p, --purge           Purge merged text file from headers filenames tags
 
 Simplify pandoc document edition.
 ```
@@ -53,6 +54,7 @@ Merged 4 files in my_merged_doc.md
 ## Split
 
 Split and update files with :
+
 ```shell
 $ classeur -s my_merged_doc.md 
 Splitting my_merged_doc.md with scissors «✂✂✂»
@@ -63,6 +65,16 @@ Found file intro.md
 Found file chapitre1.md
 Found file annexes.md
 Found file annexes.md
+```
+
+## Purge
+
+Purge merged text from headers :
+
+```Shell
+$ classeur -p my_merged_doc.md 
+Purging my_merged_doc.md from header ✂✂✂-tagged
+my_merged_doc.md purged in file purged_my_merged_doc.md
 ```
 
 ## Edit
